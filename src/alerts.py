@@ -9,26 +9,6 @@ class AlertSystem:
         self.cooldown = cooldown_seconds
         self.last_alert_time = 0
 
-    def play_alert_sound(self, level):
-        """
-        Play a beep pattern based on alert level.
-
-        HIGH     - triple beep (1500 Hz, 400 ms each)
-        CRITICAL - rapid 5 beeps (2000 Hz, 150 ms each)
-
-        Fails silently on non-Windows platforms where winsound is unavailable.
-        """
-        try:
-            import winsound
-            if level == "HIGH":
-                for _ in range(3):
-                    winsound.Beep(1500, 400)
-            elif level == "CRITICAL":
-                for _ in range(5):
-                    winsound.Beep(2000, 150)
-        except Exception:
-            pass
-
     def should_alert(self):
         """Check if enough time has passed since last alert"""
         current_time = time.time()
@@ -63,6 +43,8 @@ class AlertSystem:
               f"EAR: {metrics.get('ear', 0):.3f} | "
               f"PERCLOS: {metrics.get('perclos', 0):.2%}")
         
-        self.play_alert_sound(level)
+        # Optional: Add sound here later (planned for Raspberry Pi)
+        # import winsound
+        # winsound.Beep(1000, 500)
         
         return True

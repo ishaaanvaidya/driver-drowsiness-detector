@@ -10,6 +10,8 @@ from src.camera import Camera
 from src.detector import FaceDetector
 from src.metrics import DrowsinessMetrics
 from src.alerts import AlertSystem
+from src.logger import SessionLogger
+from src.session_summary import generate_summary
 
 
 class DrowsinessDetectionSystem:
@@ -49,6 +51,10 @@ class DrowsinessDetectionSystem:
         self.consecutive_drowsy = 0
         self.consecutive_yawn = 0
         self.flash_start_time = 0
+        self.frame_num = 0
+        
+        # Session logger
+        self.logger = SessionLogger()
         
         # Thresholds
         self.ear_threshold = self.config['drowsiness']['ear_threshold']
@@ -205,6 +211,15 @@ class DrowsinessDetectionSystem:
                 # Determine alert level
                 alert_level = self.determine_alert_level(ear, mar, perclos, blink_rate)
                 
+                # Log frame metrics
+                self.frame_num += 1
+                self.logger.log_frame(
+                    self.frame_num,
+                    {'ear': ear, 'mar': mar, 'perclos': perclos, 'blink_rate': blink_rate},
+                    alert_level,
+                    self.consecutive_drowsy
+                )
+                
                 # Trigger alerts
                 if alert_level != "NORMAL":
                     if self.alerts.trigger(alert_level, {
@@ -243,6 +258,15 @@ class DrowsinessDetectionSystem:
         self.camera.release()
         self.detector.cleanup()
         cv2.destroyAllWindows()
+        
+        # Finalise session log and print drive summary
+        csv_path = self.logger.finalize()
+        print(f"📊 Session log saved: {csv_path}")
+        try:
+            generate_summary(csv_path)
+        except Exception as e:
+            print(f"⚠️ Could not generate summary: {e}")
+        
         print("✅ Shutdown complete")
 
 
