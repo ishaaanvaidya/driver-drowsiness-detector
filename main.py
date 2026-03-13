@@ -48,6 +48,7 @@ class DrowsinessDetectionSystem:
         # State tracking
         self.consecutive_drowsy = 0
         self.consecutive_yawn = 0
+        self.flash_start_time = 0
         
         # Thresholds
         self.ear_threshold = self.config['drowsiness']['ear_threshold']
@@ -56,26 +57,30 @@ class DrowsinessDetectionSystem:
         self.mar_frames = self.config['drowsiness']['mar_consecutive_frames']
         self.perclos_threshold = self.config['drowsiness']['perclos_threshold']
         
-    def determine_alert_level(self, ear, mar, perclos):
+    def determine_alert_level(self, ear, mar, perclos, blink_rate):
         """Determine drowsiness severity"""
         
         # Critical: Multiple indicators or severe drowsiness
         if perclos > 0.3 or self.consecutive_drowsy > 60:
-            return "CRITICAL"
-        
+            level = "CRITICAL"
         # High: PERCLOS above threshold or prolonged eye closure
-        if perclos > self.perclos_threshold or self.consecutive_drowsy > self.ear_frames:
-            return "HIGH"
-        
+        elif perclos > self.perclos_threshold or self.consecutive_drowsy > self.ear_frames:
+            level = "HIGH"
         # Medium: Yawning detected
-        if self.consecutive_yawn > self.mar_frames:
-            return "MEDIUM"
-        
+        elif self.consecutive_yawn > self.mar_frames:
+            level = "MEDIUM"
         # Low: Brief eye closure
-        if self.consecutive_drowsy > 10:
-            return "LOW"
-        
-        return "NORMAL"
+        elif self.consecutive_drowsy > 10:
+            level = "LOW"
+        else:
+            level = "NORMAL"
+
+        # Upgrade level by one step when blink_rate signals drowsiness
+        if blink_rate != 0 and 1 <= blink_rate <= 10 and perclos > 0.10:
+            upgrade = {"NORMAL": "LOW", "LOW": "MEDIUM", "MEDIUM": "HIGH", "HIGH": "CRITICAL"}
+            level = upgrade.get(level, level)
+
+        return level
     
     def draw_ui(self, frame, metrics, alert_level, fps):
         """Draw UI overlay"""
@@ -89,6 +94,17 @@ class DrowsinessDetectionSystem:
             "CRITICAL": (0, 0, 255)
         }
         color = colors.get(alert_level, (0, 255, 0))
+
+        # Full-screen color flash for HIGH and CRITICAL (visible for 0.5 s)
+        if alert_level in ("HIGH", "CRITICAL"):
+            elapsed = time.time() - self.flash_start_time
+            if elapsed < 0.5:
+                flash_color = (0, 0, 255) if alert_level == "CRITICAL" else (0, 165, 255)
+                flash_overlay = frame.copy()
+                cv2.rectangle(flash_overlay, (0, 0),
+                              (frame.shape[1], frame.shape[0]),
+                              flash_color, -1)
+                cv2.addWeighted(flash_overlay, 0.3, frame, 0.7, 0, frame)
         
         # Dark overlay at top
         overlay = frame.copy()
@@ -187,16 +203,18 @@ class DrowsinessDetectionSystem:
                     self.consecutive_yawn = 0
                 
                 # Determine alert level
-                alert_level = self.determine_alert_level(ear, mar, perclos)
+                alert_level = self.determine_alert_level(ear, mar, perclos, blink_rate)
                 
                 # Trigger alerts
                 if alert_level != "NORMAL":
-                    self.alerts.trigger(alert_level, {
+                    if self.alerts.trigger(alert_level, {
                         'ear': ear,
                         'mar': mar,
                         'perclos': perclos,
                         'blink_rate': blink_rate
-                    })
+                    }):
+                        if alert_level in ("HIGH", "CRITICAL"):
+                            self.flash_start_time = time.time()
                 
                 # Draw landmarks
                 if self.config['display']['show_landmarks']:
