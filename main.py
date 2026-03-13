@@ -11,6 +11,7 @@ from src.camera import Camera
 from src.detector import FaceDetector
 from src.metrics import DrowsinessMetrics
 from src.alerts import AlertSystem
+from src.logger import SessionLogger
 
 
 class DrowsinessDetectionSystem:
@@ -45,6 +46,9 @@ class DrowsinessDetectionSystem:
         self.alerts = AlertSystem(
             cooldown_seconds=self.config['alerts']['cooldown_seconds']
         )
+
+        self.logger = SessionLogger()
+        self.frame_count = 0
         
         # State tracking
         self.consecutive_drowsy = 0
@@ -199,6 +203,17 @@ class DrowsinessDetectionSystem:
                         'blink_rate': blink_rate
                     })
                 
+                # Log frame to CSV
+                self.logger.log(
+                    frame=self.frame_count,
+                    ear=ear,
+                    mar=mar,
+                    perclos=perclos,
+                    blink_rate=blink_rate,
+                    alert_level=alert_level
+                )
+                self.frame_count += 1
+
                 # Draw landmarks
                 if self.config['display']['show_landmarks']:
                     frame = self.detector.draw_landmarks(frame, landmarks)
@@ -223,6 +238,7 @@ class DrowsinessDetectionSystem:
     
     def cleanup(self):
         """Cleanup resources"""
+        self.logger.close()
         self.camera.release()
         self.detector.cleanup()
         cv2.destroyAllWindows()
