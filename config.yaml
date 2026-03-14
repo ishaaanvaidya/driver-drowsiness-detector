@@ -1,0 +1,31 @@
+camera:
+  source: 0
+  width: 1280
+  height: 720
+  fps: 30
+
+detection:
+  min_detection_confidence: 0.5
+  min_tracking_confidence: 0.5
+
+drowsiness:
+  ear_threshold: 0.21
+  ear_consecutive_frames: 15
+  mar_threshold: 0.6
+  mar_consecutive_frames: 15
+  perclos_threshold: 0.15
+  perclos_window_seconds: 3
+
+alerts:
+  cooldown_seconds: 3
+  enable_sound: false        # set true to enable winsound beep (Windows only)
+  enable_buzzer: false       # set true when deploying on SBC with GPIO buzzer
+
+display:
+  show_landmarks: true
+  show_metrics: true
+  show_fps: true
+  window_name: "Drowsiness Detection"
+
+logging:
+  log_dir: "data/sessions"   # where SessionLogger writes CSV files
