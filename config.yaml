@@ -3,6 +3,7 @@ camera:
   width: 1280
   height: 720
   fps: 30
+  
 
 detection:
   min_detection_confidence: 0.5
