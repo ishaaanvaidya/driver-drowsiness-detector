@@ -32,6 +32,8 @@ class Camera:
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
         self.cap.set(cv2.CAP_PROP_FPS, self.fps)
         self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+        # MJPEG codec removes USB bandwidth bottleneck on Windows — major FPS boost.
+        self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
 
         if not self.cap.isOpened():
             raise RuntimeError("Failed to open camera")

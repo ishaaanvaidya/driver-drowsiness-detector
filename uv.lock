@@ -315,7 +315,7 @@ wheels = [
 
 [[package]]
 name = "drowsiness-detection"
-version = "0.1.0"
+version = "0.2.0"
 source = { virtual = "." }
 dependencies = [
     { name = "mediapipe" },
@@ -324,7 +324,6 @@ dependencies = [
     { name = "pandas" },
     { name = "plotly" },
     { name = "pyyaml" },
-    { name = "scipy" },
     { name = "streamlit" },
 ]
 
@@ -336,7 +335,6 @@ requires-dist = [
     { name = "pandas", specifier = ">=2.3.0" },
     { name = "plotly", specifier = ">=6.0.0" },
     { name = "pyyaml", specifier = ">=6.0.3" },
-    { name = "scipy", specifier = ">=1.17.0" },
     { name = "streamlit", specifier = ">=1.45.0" },
 ]
 
