@@ -209,6 +209,7 @@ class DrowsinessDetectionSystem:
     # Fusion score
     # ────────────────────────────────────────────────────────────────────
 
+
     def calculate_fusion_score(self, ear: float, mar: float, perclos: float,
                                 blink_rate: float | None, microsleep_duration: float,
                                 pose_score: float, eyes_reliable: bool = True) -> float:
@@ -237,7 +238,7 @@ class DrowsinessDetectionSystem:
         raw = min(100.0, ear_score + perclos_score + microsleep_score +
                   yawn_score + blink_score + pose_score)
 
-        alpha = 0.35 if (raw > self.drowsiness_score or not eyes_reliable) else 0.08
+        alpha = 0.22 if (raw > self.drowsiness_score or not eyes_reliable) else 0.06
         self.drowsiness_score = (1 - alpha) * self.drowsiness_score + alpha * raw
         return self.drowsiness_score
 
